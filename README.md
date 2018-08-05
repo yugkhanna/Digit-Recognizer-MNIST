@@ -2,6 +2,6 @@
 
 Training Accuracy : `98%`
 
-Test Accuracy : `99.385%`
+Test Accuracy : `99.571%`
 
-Kaggle Rank : 736/2661 (at the time of submission)
+Kaggle Rank : 347/2661 (at the time of submission)
