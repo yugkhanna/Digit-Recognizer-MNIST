@@ -11,7 +11,6 @@ from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPool2D, BatchNormal
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import LearningRateScheduler
-from keras.callbacks import LearningRateScheduler
 
 train_data = pd.read_csv("data/train.csv")
 test_data = pd.read_csv("data/test.csv")
@@ -30,33 +29,44 @@ datagen = ImageDataGenerator(
         width_shift_range=0.1,
         height_shift_range=0.1)
 
-X_train, X_val, Y_train, Y_val = train_test_split(X_train, Y_train, test_size = 0.2)
+datagen.fit(X_train)
+
+X_train, X_val, Y_train, Y_val = train_test_split(X_train, Y_train, test_size = 0.1)
 
 model = Sequential()
 
-model.add(Conv2D(32, kernel_size = 3, activation='relu', input_shape = (28, 28, 1)))
-model.add(BatchNormalization())
-model.add(Conv2D(32, kernel_size = 3, activation='relu'))
+model.add(Conv2D(32, kernel_size=5,input_shape=(28, 28, 1), activation = 'relu'))
+model.add(Conv2D(32, kernel_size=5, activation = 'relu'))
 model.add(MaxPool2D(2,2))
-model.add(Dropout(0.4))
-
-model.add(Conv2D(64, kernel_size = 3, activation='relu'))
 model.add(BatchNormalization())
-model.add(Conv2D(64, kernel_size = 5, strides=2, padding='same', activation='relu'))
 model.add(Dropout(0.4))
 
-model.add(Conv2D(128, kernel_size = 4, activation='relu'))
+model.add(Conv2D(64, kernel_size=3,activation = 'relu'))
+model.add(Conv2D(64, kernel_size=3,activation = 'relu'))
+model.add(MaxPool2D(2,2))
+model.add(BatchNormalization())
+model.add(Dropout(0.4))
+
+model.add(Conv2D(128, kernel_size=3, activation = 'relu'))
 model.add(BatchNormalization())
 
 model.add(Flatten())
+model.add(Dense(256, activation = "relu"))
 model.add(Dropout(0.4))
-model.add(Dense(10, activation='softmax'))
+model.add(Dense(128, activation = "relu"))
+model.add(Dropout(0.4))
+model.add(Dense(10, activation = "softmax"))
 
-model.compile(loss='categorical_crossentropy', optimizer = Adam(lr=0.001), metrics=["accuracy"])
+optimizer=Adam(lr=0.001)
+model.compile(optimizer = optimizer , loss = "categorical_crossentropy", metrics=["accuracy"])
+
+model.summary()
 
 annealer = LearningRateScheduler(lambda x: 1e-3 * 0.95 ** x)
-model_try = model.fit_generator(datagen.flow(X_train, Y_train, batch_size=32), steps_per_epoch=500, epochs=20, verbose=1, validation_data=(X_val, Y_val), callbacks=[annealer])
-
+model_try = model.fit_generator(datagen.flow(X_train,Y_train, batch_size=32),
+                              epochs = 30, validation_data = (X_val,Y_val),
+                              verbose = 1, steps_per_epoch=300, callbacks=[annealer])
+                              
 predictions = model.predict(X_test)
 predictions = np.argmax(predictions,axis = 1)
 predictions = pd.Series(predictions, name="Label")
